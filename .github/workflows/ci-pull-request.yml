@@ -3,8 +3,10 @@ name: Pull Request CI
 on:
   pull_request:
     branches:
-      - prd           # Kích hoạt khi tạo PR vào nhánh prd
-      - dev/**        # Kích hoạt khi tạo PR vào nhánh dev/
+      - prd            # Kích hoạt khi tạo PR vào nhánh prd
+      - dev/**         # Kích hoạt khi tạo PR vào các nhánh dev/<tên>
+      - feature/**     # Kích hoạt khi tạo PR từ nhánh feature/<tên>
+      - bugfix/**      # Kích hoạt khi tạo PR từ nhánh bugfix/<tên>
 
 jobs:
   test:
