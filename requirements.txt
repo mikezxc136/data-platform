@@ -1,0 +1,5 @@
+flake8
+pytest
+dbt-core
+apache-airflow
+dbt-spark
