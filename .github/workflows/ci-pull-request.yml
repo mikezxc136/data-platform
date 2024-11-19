@@ -3,10 +3,9 @@ name: Pull Request CI
 on:
   pull_request:
     branches:
-      - prd            # Kích hoạt khi tạo PR vào nhánh prd
-      - dev/**         # Kích hoạt khi tạo PR vào các nhánh dev/<tên>
-      - feature/**     # Kích hoạt khi tạo PR từ nhánh feature/<tên>
-      - bugfix/**      # Kích hoạt khi tạo PR từ nhánh bugfix/<tên>
+      - prd           # Kích hoạt khi tạo PR vào nhánh chính là `prd`
+    paths-ignore:
+      - README.md      # (Tùy chọn) Bỏ qua PR nếu chỉ thay đổi các file không liên quan
 
 jobs:
   test:
