@@ -1,7 +1,7 @@
 name: Pull Request CI
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - prod           # Kích hoạt khi tạo PR vào nhánh chính là `prod`
     paths-ignore:
@@ -11,6 +11,10 @@ jobs:
   lint_and_test:
     name: Lint and Test Code
     runs-on: ubuntu-latest
+
+    permissions:       # Cấp quyền cho job
+      pull-requests: write
+      contents: read
 
     steps:
       # 1. Checkout code
@@ -34,7 +38,7 @@ jobs:
         run: |
           flake8 .
 
-      # 5. (Tùy chọn) Run Unit Tests nếu thư mục `tests/` tồn tại
+      # 5. Run Unit Tests (tùy chọn, kiểm tra nếu có thư mục tests)
       - name: Run Unit Tests
         run: |
           if [ -d "tests" ]; then pytest tests/; else echo "No tests found, skipping."; fi
@@ -43,8 +47,13 @@ jobs:
     name: Require Manual Approval
     runs-on: ubuntu-latest
     needs: lint_and_test
+
+    permissions:       # Cấp quyền cho job phê duyệt
+      pull-requests: write
+
     steps:
-      - name: Wait for Review
+      # 6. Approve Pull Request
+      - name: Approve Pull Request
         uses: hmarr/auto-approve-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
