@@ -1,0 +1,18 @@
+# Sử dụng Python làm base image
+FROM python:3.9-slim
+
+# Cài đặt git và các công cụ cần thiết
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# Cài đặt DBT và adapter BigQuery
+RUN pip install dbt-core dbt-bigquery
+
+# Copy toàn bộ thư mục project vào container
+WORKDIR /usr/app/transform
+COPY . /usr/app/transform
+
+# Đặt biến môi trường cho GCP credentials
+ENV GOOGLE_APPLICATION_CREDENTIALS="/usr/app/transform/gcp-key.json"
+
+# Command mặc định khi container khởi động
+CMD ["dbt", "debug"]

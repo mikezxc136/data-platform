@@ -1,0 +1,11 @@
+FROM python:3.9-slim
+
+# Cài đặt các thư viện cần thiết
+RUN pip install --no-cache-dir celery[redis] pandas pyspark
+
+# Copy mã nguồn vào container
+WORKDIR /usr/local/src/celery
+COPY task.py /usr/local/src/celery
+
+# Command mặc định
+CMD ["celery", "-A", "task", "worker", "--loglevel=info"]

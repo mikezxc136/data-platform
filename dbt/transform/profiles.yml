@@ -1,0 +1,14 @@
+transform:
+  outputs:
+    dev:
+      dataset: retail_dataset
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      keyfile: /usr/app/transform/gcp-key.json  # Secret được Docker mount tại đây
+      location: US
+      method: service-account
+      priority: interactive
+      project: galvanic-deck-438515-a6
+      threads: 4
+      type: bigquery
+  target: dev
