@@ -3,7 +3,7 @@ networks:
     driver: bridge
 
 services:
-  # Dịch vụ DBT
+  # DBT Service
   dbt:
     build:
       context: ./dbt/transform
@@ -101,3 +101,89 @@ services:
       - "8081:8081"
     networks:
       - app-network
+
+#   # PostgreSQL Service
+#   postgres:
+#     build:
+#       context: ./postgres
+#       dockerfile: Dockerfile-postgres
+#     container_name: postgres
+#     environment:
+#       POSTGRES_USER: tuan
+#       POSTGRES_PASSWORD: 123
+#       POSTGRES_DB: dataplatform
+#     volumes:
+#       - ./postgres/data:/var/lib/postgresql/data  # Lưu trữ dữ liệu PostgreSQL
+#       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql # File khởi tạo DB
+#     ports:
+#       - "5433:5432"
+#     networks:
+#       - app-network
+
+#   # MinIO Service
+#   minio:
+#     build:
+#       context: ./minio
+#       dockerfile: Dockerfile-minio
+#     container_name: minio
+#     environment:
+#       MINIO_ROOT_USER: minioadmin
+#       MINIO_ROOT_PASSWORD: minioadmin
+#     ports:
+#       - "9000:9000" # MinIO web interface
+#       - "9001:9001" # MinIO console
+#     volumes:
+#       - ./minio/data:/data  # Lưu trữ dữ liệu của MinIO
+#       - ./minio/config:/root/.minio # Cấu hình MinIO
+#     command: server /data --console-address ":9001"
+#     networks:
+#       - app-network
+
+# # Atlas Service
+#   atlas:
+#     build:
+#       context: ./atlas
+#       dockerfile: Dockerfile-atlas
+#     container_name: atlas
+#     environment:
+#       - ATLAS_OPTS=-Xms1024m -Xmx2048m
+#       - ATLAS_PORT=21000
+#       - ATLAS_HOME=/opt/atlas
+#       - CONFIG_HOME=/opt/atlas/conf
+#       - POSTGRES_HOST=postgres  # Tên service PostgreSQL
+#       - POSTGRES_PORT=5433
+#       - POSTGRES_DB=atlas
+#       - POSTGRES_USER=tuan
+#       - POSTGRES_PASSWORD=123
+#     depends_on:
+#       - postgres
+#     ports:
+#       - "21000:21000"  # Atlas Web UI
+#     volumes:
+#       - ./atlas/logs:/opt/atlas/logs
+#       - ./atlas/conf:/opt/atlas/conf
+#     networks:
+#       - app-network
+
+#   # Ranger Service
+#   ranger:
+#     build:
+#       context: ./ranger
+#       dockerfile: Dockerfile-ranger
+#     container_name: ranger
+#     environment:
+#       - RANGER_ADMIN_OPTS=-Xms1024m -Xmx2048m
+#       - RANGER_DB_HOST=postgres  # Tên service PostgreSQL
+#       - RANGER_DB_PORT=5433
+#       - RANGER_DB_NAME=ranger
+#       - RANGER_DB_USER=tuan
+#       - RANGER_DB_PASSWORD=123
+#     depends_on:
+#       - postgres
+#     ports:
+#       - "6080:6080"  # Ranger Web UI
+#     volumes:
+#       - ./ranger/logs:/usr/local/ranger-admin/logs
+#       - ./ranger/conf:/usr/local/ranger-admin/conf
+#     networks:
+#       - app-network

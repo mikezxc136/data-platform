@@ -1,0 +1,3 @@
+# Dockerfile-ranger
+FROM apache/ranger:latest
+COPY conf /usr/local/ranger-admin/conf

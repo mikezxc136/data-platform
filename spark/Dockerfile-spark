@@ -5,4 +5,5 @@ WORKDIR /opt/spark/conf
 COPY spark-defaults.conf /opt/spark/conf/
 COPY spark-env.sh /opt/spark/conf/
 
-CMD ["/bin/bash"]
+SHELL ["/bin/sh", "-c"]
+

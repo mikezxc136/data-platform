@@ -1,0 +1,3 @@
+# Dockerfile-atlas
+FROM apache/atlas:latest
+COPY conf /opt/atlas/conf

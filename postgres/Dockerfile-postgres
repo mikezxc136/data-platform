@@ -1,0 +1,4 @@
+# Dockerfile-postgres
+FROM postgres:15
+# Copy file khởi tạo vào thư mục Docker
+COPY init.sql /docker-entrypoint-initdb.d/
