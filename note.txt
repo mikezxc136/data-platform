@@ -1,0 +1,63 @@
+1. Ingestion Layer (Lớp nạp dữ liệu)
+Nguồn dữ liệu: Dữ liệu được nạp từ nhiều nguồn như APIs, database, file (CSV, JSON, Parquet).
+Công cụ: 
+Airflow: Lập lịch và orchestrator các luồng công việc (e.g., lấy dữ liệu từ API vào MinIO).
+MinIO: Lưu trữ dữ liệu thô (raw data) ở dạng object.
+
+2. Storage Layer (Lớp lưu trữ)
+Raw Zone:
+MinIO chứa dữ liệu thô dưới các định dạng khác nhau.
+Staging Zone:
+Dữ liệu từ raw zone được Spark xử lý và lưu vào Postgres (hoặc MinIO dưới dạng Parquet/ORC) để dễ truy vấn hơn.
+Curated Zone:
+DBT xử lý và tạo các mô hình dữ liệu đã sạch sẽ, sẵn sàng phân tích.
+
+3. Processing Layer (Lớp xử lý)
+Spark:
+Xử lý dữ liệu lớn, ETL/ELT pipelines từ raw → staging → curated.
+DBT:
+Biến đổi (transform) dữ liệu từ staging sang các mô hình bảng (facts, dimensions).
+
+4. Metadata & Lineage
+Atlas:
+Theo dõi lineage và các thay đổi dữ liệu.
+Cung cấp khả năng truy vấn lineage trực quan.
+Ranger:
+Đảm bảo quyền truy cập dữ liệu được kiểm soát chặt chẽ, phù hợp với chính sách.
+
+5. Orchestration & Automation
+Airflow:
+Điều phối toàn bộ pipeline, bao gồm ingestion, xử lý, và kiểm tra chất lượng.
+Celery:
+Xử lý các task nhỏ, như kiểm tra chất lượng dữ liệu (DQ checks).
+
+6. Serving Layer (Lớp phục vụ)
+Postgres:
+Lưu trữ dữ liệu đã sạch sẵn sàng để phân tích (analytics-ready).
+BI Tools:
+Kết nối Postgres hoặc curated data để trực quan hóa dữ liệu.
+
+
+
+Flow hiện tại:
+1. Dữ liệu từ API (hoặc nguồn khác) → MinIO:
+
+Airflow tải dữ liệu từ API, lưu file thô vào MinIO.
+2. Dữ liệu thô → Staging Zone (Postgres):
+
+Spark đọc dữ liệu từ MinIO, làm sạch cơ bản, lưu vào Postgres (staging zone).
+3. Staging Zone → Curated Zone:
+
+DBT áp dụng mô hình hóa, kiểm tra logic và tổ chức thành các bảng phân tích (facts, dimensions).
+4. Quản lý Metadata:
+
+Airflow cập nhật thông tin lineage vào Atlas.
+Ranger kiểm soát quyền truy cập dữ liệu curated.
+5. Phân tích:
+
+Dữ liệu đã xử lý được BI tools kết nối để tạo báo cáo.
+
+Gợi ý cải thiện:
+Streaming Data: Nếu có dữ liệu streaming, hãy tích hợp thêm Kafka/Fluentd để bổ sung khả năng ingestion thời gian thực.
+Monitoring: Sử dụng Prometheus/Grafana để theo dõi hiệu suất của Airflow, Spark, và các dịch vụ khác.
+Data Quality: Kết hợp các công cụ như Great Expectations để kiểm tra và duy trì chất lượng dữ liệu.

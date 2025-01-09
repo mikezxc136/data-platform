@@ -19,125 +19,126 @@ services:
     networks:
       - app-network
 
-  # RabbitMQ
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - app-network
-#TODO: Fix bug celery không tìm thấy app có thể do mount sai
-  # Celery Worker
-  celery-worker:
+  # PostgreSQL Service
+  postgres:
     build:
-      context: ./celery
-      dockerfile: Dockerfile-celery
-    container_name: celery-worker
-    volumes:
-      - ./celery:/usr/local/src/celery  # Mount thư mục mã nguồn vào /usr/local/src/celery
-    working_dir: /usr/local/src/celery  # Đặt thư mục làm việc là /usr/local/src/celery
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
+      context: ./postgres
+      dockerfile: Dockerfile-postgres
+    container_name: postgres
     environment:
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=rpc://
-    command: celery -A task worker --loglevel=info
+      POSTGRES_USER: tuan
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: dataplatform
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data  # Lưu trữ dữ liệu PostgreSQL
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql # File khởi tạo DB
+    ports:
+      - "5433:5432"
     networks:
       - app-network
+
+  # MinIO Service
+  minio:
+    build:
+      context: ./minio
+      dockerfile: Dockerfile-minio
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000" # MinIO web interface
+      - "9001:9001" # MinIO console
+    volumes:
+      - ./minio/data:/data  # Lưu trữ dữ liệu của MinIO
+      - ./minio/config:/root/.minio # Cấu hình MinIO
+    command: server /data --console-address ":9001"
+    networks:
+      - app-network
+
+  # RabbitMQ
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   container_name: rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=guest
+  #     - RABBITMQ_DEFAULT_PASS=guest
+  #   healthcheck:
+  #     test: ["CMD", "rabbitmq-diagnostics", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+  #   networks:
+  #     - app-network
+#TODO: Fix bug celery không tìm thấy app có thể do mount sai, (chưa làm được, hiện tại bỏ spark)
+  # Celery Worker
+  # celery-worker:
+  #   build:
+  #     context: ./celery
+  #     dockerfile: Dockerfile-celery
+  #   container_name: celery-worker
+  #   volumes:
+  #     - ./celery:/usr/local/src/celery  # Mount thư mục mã nguồn vào /usr/local/src/celery
+  #   working_dir: /usr/local/src/celery  # Đặt thư mục làm việc là /usr/local/src/celery
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   environment:
+  #     - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+  #     - CELERY_RESULT_BACKEND=rpc://
+  #   command: celery -A task worker --loglevel=info 
+  #   networks:
+  #     - app-network
 
   # Flower
-  flower:
-    image: mher/flower
-    container_name: flower
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-    ports:
-      - "5555:5555"
-    networks:
-      - app-network
+  # flower:
+  #   image: mher/flower
+  #   container_name: flower
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   environment:
+  #     - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+  #   ports:
+  #     - "5555:5555"
+  #   networks:
+  #     - app-network
 
   # Spark Master
-  spark-master:
-    build:
-      context: ./spark
-      dockerfile: Dockerfile-spark
-    container_name: spark-master
-    hostname: spark-master
-    environment:
-      - SPARK_MODE=master
-    ports:
-      - "8080:8080"
-      - "7077:7077"
-    networks:
-      - app-network
+  # spark-master:
+  #   build:
+  #     context: ./spark
+  #     dockerfile: Dockerfile-spark
+  #   container_name: spark-master
+  #   hostname: spark-master
+  #   environment:
+  #     - SPARK_MODE=master
+  #   ports:
+  #     - "8080:8080"
+  #     - "7077:7077"
+  #   networks:
+  #     - app-network
 
   # Spark Worker
-  spark-worker:
-    build:
-      context: ./spark
-      dockerfile: Dockerfile-spark
-    container_name: spark-worker
-    hostname: spark-worker
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-    depends_on:
-      - spark-master
-    ports:
-      - "8081:8081"
-    networks:
-      - app-network
+  # spark-worker:
+  #   build:
+  #     context: ./spark
+  #     dockerfile: Dockerfile-spark
+  #   container_name: spark-worker
+  #   hostname: spark-worker
+  #   environment:
+  #     - SPARK_MODE=worker
+  #     - SPARK_MASTER_URL=spark://spark-master:7077
+  #   depends_on:
+  #     - spark-master
+  #   ports:
+  #     - "8081:8081"
+  #   networks:
+  #     - app-network
 
-#   # PostgreSQL Service
-#   postgres:
-#     build:
-#       context: ./postgres
-#       dockerfile: Dockerfile-postgres
-#     container_name: postgres
-#     environment:
-#       POSTGRES_USER: tuan
-#       POSTGRES_PASSWORD: 123
-#       POSTGRES_DB: dataplatform
-#     volumes:
-#       - ./postgres/data:/var/lib/postgresql/data  # Lưu trữ dữ liệu PostgreSQL
-#       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql # File khởi tạo DB
-#     ports:
-#       - "5433:5432"
-#     networks:
-#       - app-network
-
-#   # MinIO Service
-#   minio:
-#     build:
-#       context: ./minio
-#       dockerfile: Dockerfile-minio
-#     container_name: minio
-#     environment:
-#       MINIO_ROOT_USER: minioadmin
-#       MINIO_ROOT_PASSWORD: minioadmin
-#     ports:
-#       - "9000:9000" # MinIO web interface
-#       - "9001:9001" # MinIO console
-#     volumes:
-#       - ./minio/data:/data  # Lưu trữ dữ liệu của MinIO
-#       - ./minio/config:/root/.minio # Cấu hình MinIO
-#     command: server /data --console-address ":9001"
-#     networks:
-#       - app-network
 
 # # Atlas Service
 #   atlas:
